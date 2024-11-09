@@ -1,0 +1,1 @@
+mosmlc -I /comp/105/lib -o a.out mlscheme-improved.sml && ./a.out
