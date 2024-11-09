@@ -1649,14 +1649,29 @@ fun unsatisfiableEquality (t1, t2) =
          | _ => raise InternalError "failed to synthesize canonical type"
   end
 
+fun occursInType alpha (TYVAR b)         = alpha = b
+  | occursInType alpha (CONAPP (_, tys)) = List.exists (occursInType alpha) tys
+  | occursInType alpha _                 = false 
+
 (* constraint solving ((prototype)) 437b *)
-fun solve TRIVIAL           = idsubst
+fun solve TRIVIAL        = idsubst
   | solve (tau1 ~ tau2)  = 
+        if eqType (tau1, tau2) then idsubst else
             (case (tau1, tau2) of 
-                  (TYVAR a, TYVAR a') =>
-                      mkEnv ([a], [TYVAR a'])
+                  (TYVAR a, tau2) => 
+                      if not (occursInType a tau2)
+                          then mkEnv ([a], [tau2])
+                      else raise unsatisfiableEquality (tau1, tau2)
                 | (tau1, TYVAR a) => solve (TYVAR a ~ tau1)
-                | _ => raise LeftAsExercise "solve")
+                (* since case where theyre the same already handled *)
+                | (_, TYCON t) => raise unsatisfiableEquality (tau1, tau2)
+                | (TYCON t, _) => raise unsatisfiableEquality (tau1, tau2)
+                | (CONAPP (t, ts), CONAPP (t', ts')) => 
+                    solve (List.foldl 
+                      (fn ((t1, t2), acc) => (t1 ~ t2) /\ acc)
+                      TRIVIAL
+                      (ListPair.zipEq (t::ts, t'::ts')))
+                )
   | solve (con1 /\ con2) = 
         let 
             val theta1 = solve con1
@@ -1677,6 +1692,12 @@ fun solutionEquivalentTo (c, theta) = eqsubst (solve c, theta)
 val () = Unit.checkAssert "a ~ b can be solved"
          (fn () => hasSolution (TYVAR "a" ~ TYVAR "b"))
 
+val () = Unit.checkAssert "a ~ a can be solved"
+         (fn () => hasSolution (TYVAR "a" ~ TYVAR "a"))
+
+val () = Unit.checkAssert "equal conapps can be solved"
+         (fn () => hasSolution ((CONAPP (TYCON "list" [TYON "int"])) ~ (CONAPP (TYCON "list" [TYON "int"]))))
+
 val () = Unit.checkAssert "int ~ bool cannot be solved"
          (fn () => hasNoSolution (inttype ~ booltype))
 
@@ -1689,6 +1710,8 @@ val () = Unit.checkAssert "bool ~ bool is solved by the identity substitution"
 val () = Unit.checkAssert "bool ~ 'a is solved by 'a |--> bool"
          (fn () => solutionEquivalentTo (booltype ~ TYVAR "'a", 
                                          "'a" |--> booltype))
+
+
 
 
 (* utility functions for {\uml} S435c *)
