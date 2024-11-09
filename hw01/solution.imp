@@ -1,0 +1,201 @@
+;;;;;;;;;;;;;;;;;;; CS 105 IMPCORE ASSIGNMENT ;;;;;;;;;;;;;;;
+
+;; Your Name: Matthew Carey
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;
+;;;;  Problem 1
+
+
+;; (double-digit n) returns a nonnegative integer whose decimal representation 
+;; is the same as the decimal representation of integer n, except each digit 
+;; appears twice. n must be positive and less than 20,000.
+
+;; laws:
+;;   (double-digit n) == (+ (* 10 n) n), when (n < 10)
+;;   (double-digit (+ (* m 10) b)) == (+ (* 100 (double-digit m)) 
+;;                                       (+ (* 10 b) b)), otherwise
+
+(define double-digit (n)
+        (if (< n 10)
+                (+ (* 10 n) n)
+                (+ (* 100 (double-digit (/ n 10))) 
+                    (+ (* 10 (mod n 10)) (mod n 10)))
+        )
+)
+
+        ;; replace next line with good check-expect or check-assert tests
+        (check-expect (double-digit 9) 99)
+        (check-expect (double-digit 123) 112233)
+        (check-expect (double-digit 112) 111122)
+        (check-assert (not (= (double-digit 123) 123)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;
+;;;;  Problem 2
+
+
+;; (population-count n) returns the number of 1 bits in the binary
+;; representation of integer n.
+
+;; laws:
+;;   (population-count n) == (mod n 2), when (< n 2)
+;;   (population-count (+ (* m 2) b)) == (+ (population-count m) b), otherwise
+
+(define population-count (n)
+        (if (< n 2)
+                (mod n 2)
+                (+ (population-count (/ n 2)) (mod n 2))
+        )
+)
+
+        ;; replace next line with good check-expect or check-assert tests
+        (check-expect (population-count 0) 0)
+        (check-expect (population-count 3) 2)
+        (check-assert (not (= (population-count 1) 0)))
+        (check-assert (not (= (population-count 4) 0)))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;
+;;;;  Problem 3
+
+
+;; (binary n) returns the binary representation of integer n.
+
+;; laws:
+;;   (binary n) == (mod n 2), when (< n 2)
+;;   (binary (+ (* m 2) b)) == (+ (* (binary m) 10) b), otherwise
+
+(define binary (n)
+        (if (< n 2)
+                (mod n 2)
+                (+ (* (binary (/ n 2)) 10) (mod n 2))
+        )
+)
+
+        ;; replace next line with good check-expect or check-assert tests
+        (check-expect (binary 1) 1)
+        (check-expect (binary 5) 101)
+        (check-assert (not (= (binary 0) 1)))
+        (check-assert (not (= (binary 4) 11)))
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;
+;;;;  Problem 4
+
+
+;; (sigma m n) returns the sum of the integers from m to n,
+;; where m is an integer and n is an integer greater than or
+;; equal to m. 
+
+;; laws:
+;;   (sigma  m n) == m, when (= n m)
+;;   (sigma  m n) == (+ n (sigma m (- n 1))), when (> n m)
+
+(define sigma (m n)
+        (if (= m n)
+                m
+                (+ n (sigma m (- n 1)))
+        )
+)
+
+        ;; replace next line with good check-expect or check-assert tests
+        (check-expect (sigma 1 5) 15)
+        (check-expect (sigma 5 32) 518)
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;
+;;;;  Problem 5
+
+;; (prime-helper n divisor) returns 1 if the divisor equals n and 0 if it 
+;; divides n, otherwise it recurses with n and divisor + 1, where n is 
+;; the input to prime? and divisor is the iterative checker
+
+;; laws:
+;;   (prime-helper n divisor) == 1, when (= n divisor)
+;;   (prime-helper n divisor) == 0, when 
+;;                                (and (not = n divisor) (= 0 (mod n divisor)))
+;;   (prime-helper n divisor) == (prime-helper n (+ divisor 1)), otherwise
+(define prime-helper (n divisor)
+        (if (= divisor n)
+                1
+                (if (= 0 (mod n divisor))
+                0
+                (prime-helper n (+ divisor 1))
+                )
+        )
+)
+
+;; (prime? n) returns 1 if n is prime and 0 otherwise, where n is a
+;; nonnegative integer.
+
+;; laws:
+;;   (prime? n) == 0, when (<= n 1)
+;;   (prime? n) == (prime-helper n 2), otherwise
+
+(define prime? (n)
+        (if (<= n 1)
+                0
+                (prime-helper n 2)
+        )
+)
+
+        ;; replace next line with good check-expect or check-assert tests
+        (check-assert (not (prime? 1)))
+        (check-assert (prime? 2))
+        (check-assert (prime? 13))
+        (check-assert (not (prime? 25)))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;
+;;;;  Problem 6
+
+;; (nth-from-start) returns the nth prime number starting from start-val
+
+;; laws:
+;;   (nth-from-start n) == start-val, when (and (= n 0) (prime? start-val))
+;;   (nth-from-start n) == (nth-from-start (- n 1) (+ start-val 1)), when 
+;;   (and (not (= n 0)) (prime? start-val))
+;;   (nth-from-start n) == (nth-from-start n (+ start-val 1)), when 
+;;   (not (prime? start-val))
+(define nth-from-start (n start-val)
+        (if (prime? start-val)
+                (if (= n 1)
+                        start-val
+                        (nth-from-start (- n 1) (+ start-val 1))
+                )
+                (nth-from-start n (+ start-val 1))
+        )
+)
+
+
+;; (nthprime n) returns the nth number in the sequence of prime numbers, where 
+;; n is a positive integer
+
+;; laws:
+;;   (nthprime n) == 2, when (= n 1)
+;;   (nthprime n) == nth-from-start, when (> n 1)
+;; [optional notes about where laws come from, or difficulty, if any]
+
+(define nthprime (n)
+        (if (= n 1)
+                2
+                (nth-from-start (- n 1) 3)
+        )
+)
+
+        ;; replace next line with good check-expect or check-assert tests
+        (check-expect (nthprime 1) 2)
+        (check-expect (nthprime 7) 17)
+        (check-expect (nthprime 10) 29)

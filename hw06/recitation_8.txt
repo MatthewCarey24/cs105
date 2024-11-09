@@ -1,0 +1,48 @@
+I   
+    1) 
+        a) paranthesis are used to define a tuple, but theyre represented just with
+           stars
+        b) isABC has a different type because it is taking in 1 argument, a tuple
+           with 3 elements. isDEF takes 3 individual arguments, hence the 3 arrows
+        c) every arrow represents a currying. every argument is curried to the next
+    
+    2) 
+        a) plum
+        b) peach
+        c) slice
+        d) apple
+        e) orange
+    
+    3) 
+        a) pear
+        b) front
+        c) melon
+        d) back
+    
+    4) 
+        a) star
+        b) kiwi, grape
+        c) kiwi, grape
+
+II
+    1) datatype binary = ZB
+                        | TWICE_PLUS of binary * bit
+
+    2)  fun eval_bit ZEROBIT = 0
+          | eval_bit ONEBIT = 1
+    
+        fun int_of_binary ZB               = 0
+         | int_of_binary (TWICE_PLUS(bin, bit)) = (eval_bit bit) + (2 * int_of_binary bin)
+
+    3) 
+        val x = BOOL false
+        val x = NUM 17
+        val x = SYM "frog"
+        val x = SXS[SYM "COMP", SYM "105"]
+
+    4) datatype uscheme_value = BOOLEAN of bool
+                              = NUMBER of int
+                              = SYMBOL of string 
+                              = NULL
+                              = CONS of uscheme_value * uscheme_value
+                              = FUNC of uscheme_value list => uscheme_value

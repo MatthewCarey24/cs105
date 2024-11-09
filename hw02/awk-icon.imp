@@ -1,0 +1,10 @@
+;;;;;;;;;;;;;;;;;;; CS 105 HOMEWORK 2 ;;;;;;;;;;;;;;;
+
+;; Author: Matthew Carey
+
+;; (unbound-var n) returns 1 if run in an impcore-awk interpreter, 0 if run in
+;; a impcore-icon interpreter, and an error if run in plain impore
+(define foo (x) x)
+
+(set x 1)
+(foo x)
