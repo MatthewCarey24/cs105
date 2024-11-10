@@ -103,17 +103,17 @@ assistance!
  2. (a) Yes or no: does the substitution `(α → sym) ∘ (β → bool) ∘ (γ → int)`
         replace type variable `α` with type `sym`?
 
-        >
+        > yes
 
     (b) Yes or no: does the substitution `(α → sym) ∘ (β → bool) ∘ (γ → int)`
         replace type variable `β` with type `bool`?
 
-        >
+        > yes
 
     (c) Yes or no: does the substitution `(α → sym) ∘ (β → bool) ∘ (γ → int)`
         leave the type `γ list` unchanged?
 
-        >
+        > yes
 
     (d) Which of the following nano-ML type expressions, written in concrete
         nano-ML syntax, are *instances* of the polymorphic type scheme 
@@ -125,19 +125,19 @@ assistance!
         
         `(list int)`   True or False
 
-        >
+        > False
 
         `(list (list int))`  True or False
 
-        >
+        > False
 
         `((list (list int)) -> int)`  True or False
 
-        >
+        > True
 
         `((list int) int -> list)`  True or False
 
-        >
+        > False
 
     _You have a foundation on which to build for exercise 2._
 
@@ -156,21 +156,21 @@ explains how to solve constraints by finding substitutions.
     
     (a) Write $C'$:
 
-    > 
+    > `int ~ α₂ /\ α₂ ~ α₃ list /\ α₄ ~ α₃ list list`
     
     (b) Does $C'$ have a solution?  Answer yes or no.
 
-    >
+    > no
 
     Now define $C''$ as the result of applying substitution `(α₂ ↦ int)` to $C$.
 
     (c) Write $C''$:
     
-    >
+    > `α₁ ~ int /\ int ~ α₃ list /\ α₄ ~ α₃ list list`
 
     (d) Does $C''$ have a solution?  Answer yes or no.
 
-    >
+    > No
     
 
     _You are getting ready for exercise 2._
@@ -190,29 +190,32 @@ explains how to solve constraints by finding substitutions.
 
     (a) Write a substitution `θ₁` that solves constraint `C₁`:
        
-    >
+    > $θ₁$ = (α ↦ int)
 
 
     (b) Write a substitution `θ₂` that solves constraint `C₂`:
 
-    >
+    > $θ₂$ = (α ↦ bool)
 
 
     (c) Does the composition `θ₂ ∘ θ₁` solve constraint `C₃ = C₁ /\ C₂`?
         Answer yes or no.
 
-    >
+    > No, there is a type error because the substitutions are applied 
+      sequentially, so we will try to apply (α ↦ bool) to 
+      θ₁(C₃) = (int ~ int) /\ (int ~ bool) which has a clear type mismatch
+
 
 
     (d) Can constraint `C₃` be solved? Answer yes or no.
 
-    >
+    > No 
 
 
     (e) Can constraint `C₄` be solved? Answer yes or no.
 
 
-    >
+    > No
 
 
     _You are ready for exercise 2._
@@ -284,16 +287,16 @@ outputs of type inference for expression (+ 3 2).
         arguments to the function.) 
         In judgment C, Γ ⊢ e : τ, what does the type checker output for τ?
 
-        >
+        > 'c
 
         And what does the type checker output for C?
 
-        >
+        > ('a ~ int) /\ ('b ~ bool)
 
     (b) Assume that `f` is bound in Γ to the type scheme `∀.'a`.
         In judgment C, Γ ⊢ e : τ, what does the type checker output for τ?
 
-        >
+        > 
 
         And what does the type checker output for C?
 
@@ -365,7 +368,7 @@ references to that that function in this reading call it `too-poly`.
     (b) What set in this example plays the role of `{ α₁, ..., αₙ }` in Milner's
         Let, which is ftv(τ')-ftv(Γ)?
 
-        > β 
+        > β
     
 
     (c) What is the *type scheme* to which `empty-list` (playing x) is 

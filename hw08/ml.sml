@@ -1650,11 +1650,11 @@ fun unsatisfiableEquality (t1, t2) =
   end
 
 fun occursInType alpha (TYVAR b)         = alpha = b
-  | occursInType alpha (CONAPP (_, tys)) = List.exists (occursInType alpha) tys
+  | occursInType alpha (CONAPP (ty, tys)) = List.exists (occursInType alpha) tys
   | occursInType alpha _                 = false 
 
 (* constraint solving ((prototype)) 437b *)
-fun solve TRIVIAL           = idsubst
+fun solve TRIVIAL        = idsubst
   | solve (tau1 ~ tau2)  = 
         if eqType (tau1, tau2) then idsubst else
             (case (tau1, tau2) of 
@@ -1663,6 +1663,7 @@ fun solve TRIVIAL           = idsubst
                           then mkEnv ([a], [tau2])
                       else raise unsatisfiableEquality (tau1, tau2)
                 | (tau1, TYVAR a) => solve (TYVAR a ~ tau1)
+                (* since case where theyre the same already handled *)
                 | (_, TYCON t) => raise unsatisfiableEquality (tau1, tau2)
                 | (TYCON t, _) => raise unsatisfiableEquality (tau1, tau2)
                 | (CONAPP (t, ts), CONAPP (t', ts')) => 
@@ -1687,6 +1688,23 @@ fun hasGoodSolution c = solves (solve c, c) handle TypeError _ => false
 val hasSolution = not o hasNoSolution : con -> bool
 fun solutionEquivalentTo (c, theta) = eqsubst (solve c, theta)
 
+(****************************** IDEMPOTENT TEST ******************************)
+
+fun isIdempotent pairs =
+    let fun distinct a' (a, tau) = a <> a' andalso not (member a' (freetyvars tau))
+        fun good (prev', (a, tau)::next) =
+              List.all (distinct a) prev' andalso List.all (distinct a) next
+              andalso good ((a, tau)::prev', next)
+          | good (_, []) = true
+    in  good ([], pairs)
+    end
+
+val solve =
+    fn c => let val theta = solve c
+            in  if isIdempotent theta then theta
+                else raise BugInTypeInference "non-idempotent substitution"
+            end
+
 (***************************** UNIT TESTS BELOW ******************************)
 val () = Unit.checkAssert "a ~ b can be solved"
          (fn () => hasSolution (TYVAR "a" ~ TYVAR "b"))
@@ -1695,7 +1713,16 @@ val () = Unit.checkAssert "a ~ a can be solved"
          (fn () => hasSolution (TYVAR "a" ~ TYVAR "a"))
 
 val () = Unit.checkAssert "equal conapps can be solved"
-         (fn () => hasSolution ((CONAPP (TYCON "list" [TYON "int"])) ~ (CONAPP (TYCON "list" [TYON "int"]))))
+         (fn () => hasSolution ((CONAPP (TYCON "list", [TYCON "int"])) ~ (CONAPP (TYCON "list", [TYCON "int"]))))
+
+val () = Unit.checkAssert "tyvar not in conapp"
+         (fn () => hasSolution ((TYVAR "a") ~ (CONAPP (TYCON "list", [TYCON "int"]))))
+
+val () = Unit.checkAssert "tyvar in conapp"
+         (fn () => hasNoSolution ((TYVAR "a") ~ (CONAPP (TYCON "list", [TYVAR "a"]))))
+
+val () = Unit.checkAssert "tyvar listed second"
+         (fn () => hasSolution ((CONAPP (TYCON "list", [TYCON "int"])) ~ (TYVAR "a")))
 
 val () = Unit.checkAssert "int ~ bool cannot be solved"
          (fn () => hasNoSolution (inttype ~ booltype))
@@ -1709,6 +1736,13 @@ val () = Unit.checkAssert "bool ~ bool is solved by the identity substitution"
 val () = Unit.checkAssert "bool ~ 'a is solved by 'a |--> bool"
          (fn () => solutionEquivalentTo (booltype ~ TYVAR "'a", 
                                          "'a" |--> booltype))
+
+val () = Unit.checkAssert "Conapp eq"
+         (fn () => hasSolution ((CONAPP (TYCON "list", [TYVAR "'a"])) ~ 
+                                (CONAPP (TYCON "list", [TYCON "int"]))))
+
+val () = Unit.checkAssert "'a list ~ int list is solved by 'a |--> int"
+        (fn () => solutionEquivalentTo ((CONAPP (TYCON "list", [TYVAR "'a"])) ~ (CONAPP (TYCON "list", [TYCON "int"])), "'a" |--> TYCON "int"))
 
 
 
