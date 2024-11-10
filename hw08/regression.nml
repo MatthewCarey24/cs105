@@ -1,0 +1,20 @@
+
+; Step 3
+
+(check-principal-type 3 int)
+(check-principal-type #f bool)
+(check-principal-type 'a' sym)
+
+(check-type-error ad)
+
+;Step 4
+
+(check-principal-type (if #t 1 2) int)
+(check-principal-type (if #t 'a' 'b') sym)
+
+(check-type-error (if 1 'a' 'b'))
+(check-type-error (if #t 1 'b'))
+
+;Come back to
+(check-principal-type (begin ) unit)
+(check-principal-type (begin 3 4 #t) bool)
