@@ -1686,20 +1686,55 @@ fun hasGoodSolution c = solves (solve c, c) handle TypeError _ => false
 val hasSolution = not o hasNoSolution : con -> bool
 fun solutionEquivalentTo (c, theta) = eqsubst (solve c, theta)
 
+(****************************** IDEMPOTENT TEST ******************************)
+
+fun isIdempotent pairs =
+    let fun distinct a' (a, tau) = a <> a' andalso not (member a' (freetyvars tau))
+        fun good (prev', (a, tau)::next) =
+              List.all (distinct a) prev' andalso List.all (distinct a) next
+              andalso good ((a, tau)::prev', next)
+          | good (_, []) = true
+    in  good ([], pairs)
+    end
+
+val solve =
+    fn c => let val theta = solve c
+            in  if isIdempotent theta then theta
+                else raise BugInTypeInference "non-idempotent substitution"
+            end
+
 (***************************** UNIT TESTS BELOW ******************************)
+val () = Unit.checkAssert "a ~ b can be solved"
+         (fn () => hasSolution (TYVAR "a" ~ TYVAR "b"))
+
+val () = Unit.checkAssert "a ~ a can be solved"
+         (fn () => hasSolution (TYVAR "a" ~ TYVAR "a"))
+
+val () = Unit.checkAssert "equal conapps can be solved"
+         (fn () => hasSolution ((CONAPP (TYCON "list", [TYCON "int"])) ~ (CONAPP (TYCON "list", [TYCON "int"]))))
+
+val () = Unit.checkAssert "tyvar not in conapp"
+         (fn () => hasSolution ((TYVAR "a") ~ (CONAPP (TYCON "list", [TYCON "int"]))))
+
+val () = Unit.checkAssert "tyvar in conapp"
+         (fn () => hasNoSolution ((TYVAR "a") ~ (CONAPP (TYCON "list", [TYVAR "a"]))))
+
+val () = Unit.checkAssert "tyvar listed second"
+         (fn () => hasSolution ((CONAPP (TYCON "list", [TYCON "int"])) ~ (TYVAR "a")))
 
 val () = Unit.checkAssert "int ~ bool cannot be solved"
          (fn () => hasNoSolution (inttype ~ booltype))
 
-val () = Unit.checkAssert "bool ~ bool can be solved"
-         (fn () => hasSolution (booltype ~ booltype))
-
-val () = Unit.checkAssert "bool ~ bool is solved by the identity substitution"
-         (fn () => solutionEquivalentTo (booltype ~ booltype, idsubst))
-
 val () = Unit.checkAssert "bool ~ 'a is solved by 'a |--> bool"
          (fn () => solutionEquivalentTo (booltype ~ TYVAR "'a", 
                                          "'a" |--> booltype))
+
+val () = Unit.checkAssert "Conapp eq"
+         (fn () => hasSolution ((CONAPP (TYCON "list", [TYVAR "'a"])) ~ 
+                                (CONAPP (TYCON "list", [TYCON "int"]))))
+
+val () = Unit.checkAssert "'a list ~ int list is solved by 'a |--> int"
+        (fn () => solutionEquivalentTo ((CONAPP (TYCON "list", [TYVAR "'a"])) ~ (CONAPP (TYCON "list", [TYCON "int"])), "'a" |--> TYCON "int"))
 
 (* utility functions for {\uml} S435c *)
 (* filled in when implementing uML *)
@@ -1760,7 +1795,7 @@ fun typeof (e, Gamma) =
             fun check_type [] = (unittype, TRIVIAL)
               | check_type es = 
                 let val da = print "a"
-                    val (type_es, con_es) = (typesof (es, Gamma))
+                    val (type_es, con_es) = typesof (es, Gamma)
                     val type_last = List.last type_es
                 in (type_last, con_es)
                 end
@@ -2846,3 +2881,5 @@ val _ = if hasOption "NORUN" then ()
         else perform (strip_options DEFAULT (CommandLine.arguments ()))
 (* type declarations for consistency checking *)
 val _ = op strip_options : action -> string list -> action * string list
+
+val () = Unit.reportWhenFailures ()
