@@ -1,5 +1,5 @@
 # CS105 - Programming Languages
-This repository contains all of my projects for CS105. This class taught advanced programming concepts including functions, types, objects, and the formal mathematical foundations of languages, such as abstract syntax, semantics, and type systems.
+This repository contains all of my projects for CS105. This class taught the formal mathematical foundations of languages, such as abstract syntax, semantics, and type systems.
 ## Projects
 - ```impcore``` - Gaining familiarity writing functions from algebraic laws
 - ```Opsem```  - Introducing the basics of operational semantics, inference rules, and syntactic proof techniques, providing foundational skills for understanding and analyzing new programming languages
